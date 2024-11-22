@@ -1,15 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Button, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Button, FlatList, StyleSheet, Alert } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../MyReactNativeApp/types';
+import { RootStackParamList } from '../MyReactNativeApp/types'
+import FilterMenuScreen from '../screens/FilterMenuScreen';
 
 type HomeScreenProps = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
 export default function HomeScreen({ navigation, route }: HomeScreenProps) {
-  const [menuItems, setMenuItems] = useState<{ dishName: string, description: string, course: string, price: number }[]>([]);
+  const [menuItems, setMenuItems] = useState<{ dishName: string; description: string; course: string; price: number }[]>([]);
+  
+  // Calculate average price
+  const averagePrice = menuItems.length > 0 
+    ? menuItems.reduce((sum, item) => sum + item.price, 0) / menuItems.length 
+    : 0;
 
+  // Handle removal of a menu item
+  const removeItem = (index: number) => {
+    Alert.alert(
+      "Remove Item",
+      "Are you sure you want to remove this item?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "OK", onPress: () => setMenuItems(menuItems.filter((_, i) => i !== index)) }
+      ]
+    );
+  };
+
+  // Check if newItem exists in route.params and add it to the menu
   useEffect(() => {
-    
     if (route.params?.newItem) {
       setMenuItems((prevItems) => [...prevItems, route.params.newItem as { dishName: string; description: string; course: string; price: number }]);
     }
@@ -18,24 +36,21 @@ export default function HomeScreen({ navigation, route }: HomeScreenProps) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Chef's Menu</Text>
-     
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('AddMenu')}>
-        <Text style={styles.buttonText}>Add Menu</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('FilterMenu')}>
-        <Text style={styles.buttonText}>Filter Menu</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.itemCount}>Total Items: {menuItems.length}</Text>
+      <Button title="Add Menu" onPress={() => navigation.navigate('AddMenu')} />
+      <Button title="Filter Menu" onPress={() => navigation.navigate ('FilterMenu',{ menuItems })} />
+      
+      <Text style={styles.totalItems}>Total Items: {menuItems.length}</Text>
+      <Text style={styles.averagePrice}>Average Price: ${averagePrice.toFixed(2)}</Text>
 
       <FlatList
         data={menuItems}
         keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item }) => (
+        renderItem={({ item, index }) => (
           <View style={styles.menuItem}>
             <Text style={styles.dishName}>{item.dishName} - {item.course}</Text>
-            <Text style={styles.description}>{item.description}</Text>
-            <Text style={styles.price}>${item.price.toFixed(2)}</Text>
+            <Text>{item.description}</Text>
+            <Text>${item.price.toFixed(2)}</Text>
+            <Button title="Remove" color="blue" onPress={() => removeItem(index)} />
           </View>
         )}
       />
@@ -49,52 +64,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#F5F5DC', // Beige background
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
+    fontSize: 24,
     marginBottom: 20,
-    color: '#001f3f', // Navy blue
   },
-  button: {
-    backgroundColor: '#001f3f', // Navy blue
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-    marginBottom: 15,
+  totalItems: {
+    fontSize: 18,
+    marginTop: 10,
   },
-  buttonText: {
-    color: '#FFFFFF', // White text
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  itemCount: {
-    fontSize: 16,
-    color: '#000000', // Black text
-    marginBottom: 10,
+  averagePrice: {
+    fontSize: 18,
+    marginBottom: 20,
   },
   menuItem: {
-    backgroundColor: '#FFFFFF', // White background for menu item
-    borderWidth: 1,
-    borderColor: '#E0E0E0', // Light border for separation
-    borderRadius: 5,
-    padding: 15,
-    marginVertical: 8,
+    borderBottomWidth: 1,
+    paddingVertical: 10,
     width: '100%',
   },
   dishName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000000', // Black text
-  },
-  description: {
-    fontSize: 14,
-    color: '#4A4A4A', // Grey text
-    marginVertical: 5,
-  },
-  price: {
     fontSize: 16,
-    color: '#001f3f', // Navy blue for price
+    fontWeight: 'bold',
   },
-})
+});
