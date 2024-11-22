@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5F5DC', // Beige background
+    backgroundColor: '#e6e2d3',
     padding: 20,
   },
   title: {
